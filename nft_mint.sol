@@ -13,6 +13,16 @@ pragma solidity ^0.8.1;
 
         // Base URI
         string private _baseURIextended;
+        bool public _allowedMintAll=false;
+        
+       
+         struct author{
+            
+            uint orgNftId;
+            address orgAddress;
+        }
+        
+        author[] public authorLists;
 
 
         constructor(string memory _name, string memory _symbol)
@@ -59,4 +69,54 @@ pragma solidity ^0.8.1;
             _mint(_to, _tokenId);
             _setTokenURI(_tokenId, tokenURI_);
         }
+        
+        function mintWithAuthor(
+            address _to,
+            uint256 _tokenId,
+            string memory tokenURI_,
+            address authorAddress
+        ) external onlyOwner() {
+            _mint(_to, _tokenId);
+            _setTokenURI(_tokenId, tokenURI_);
+             authorLists.push(author({orgNftId: _tokenId,orgAddress:authorAddress}));
+            
+        }
+        
+        
+        function setPublicMint(bool publicMintSet) external onlyOwner() {
+            _allowedMintAll= publicMintSet;
+        }
+        
+        
+        function mintWithAuthorPublic(
+            
+            
+            address _to,
+            uint256 _tokenId,
+            string memory tokenURI_,
+            address authorAddress
+        ) public {
+            require(_allowedMintAll==false, "A public mint is not allowed!");
+            _mint(_to, _tokenId);
+            _setTokenURI(_tokenId, tokenURI_);
+             authorLists.push(author({orgNftId: _tokenId,orgAddress:authorAddress}));
+            
+        }
+        
+        
+        //function getAuthorAddres(uint256 _tokenId) public {
+        function getAuthorAddres(uint256 _tokenId) public view returns (address) {
+            uint maxLength=authorLists.length;
+            address returnAddres; 
+            
+            for (uint i = 0; i < maxLength; i++) {
+              author storage author1 = authorLists[i-1];
+              if(author1.orgNftId==_tokenId)
+                returnAddres = author1.orgAddress;
+            }
+             return returnAddres;
+        }
+        
+        
+        
     }
