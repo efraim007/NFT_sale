@@ -110,7 +110,7 @@ pragma solidity ^0.8.1;
             address returnAddres; 
             
             for (uint i = 0; i < maxLength; i++) {
-              author storage author1 = authorLists[i-1];
+              author storage author1 = authorLists[i];
               if(author1.orgNftId==_tokenId)
                 returnAddres = author1.orgAddress;
             }
