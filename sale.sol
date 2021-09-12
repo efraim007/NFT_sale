@@ -204,11 +204,7 @@ contract Destructible is Ownable {
 }
 
 
-/**
- * @title CryptoArteSales
- * CryptoArteSales - a sales contract for CryptoArte non-fungible tokens 
- * corresponding to paintings from the www.cryptoarte.io collection
- */
+
 contract CryptoArteSales is Ownable, Pausable, Destructible {
 
     event Sent(address indexed payee, uint256 amount, uint256 balance);
@@ -230,7 +226,7 @@ contract CryptoArteSales is Ownable, Pausable, Destructible {
     
     /**
     * @dev Contract Constructor
-    * @param _nftAddress address for Crypto Arte non-fungible token contract 
+    * @param _nftAddress address for non-fungible token contract 
     * @param _currentPrice initial sales price
     */
     constructor(address _nftAddress, uint256 _currentPrice) public { 
