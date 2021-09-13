@@ -229,7 +229,7 @@ contract nftSales is Ownable, Pausable, Destructible {
 
     /**
     * @dev Contract Constructor
-    * @param _nftAddress address for Crypto Arte non-fungible token contract 
+    * @param _nftAddress address non-fungible token contract 
     * @param _currentPrice initial sales price
     */
     constructor(address _nftAddress, uint256 _currentPrice) public { 
@@ -246,10 +246,22 @@ contract nftSales is Ownable, Pausable, Destructible {
 	*/
     function purchaseToken(uint256 _tokenId) public payable whenNotPaused {
         require(msg.sender != address(0) && msg.sender != address(this));
-        require(msg.value >= currentPrice);
-        require(nftAddress.exists(_tokenId));
-        address tokenSeller = nftAddress.ownerOf(_tokenId);
+        //require(msg.value >= currentPrice);
+		require(msg.value >= getSalePrice(_tokenId);
+        require(nftAddress.exists(_tokenId));//need to test
+        address tokenSeller = nftAddress.ownerOf(_tokenId);//need to test
         nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
+		
+		// calculate to dev and author fee and reduce from BNB
+		
+		//BNB change to HVI on Pancakeswap
+		
+		//HVI transfer for seller
+		
+		//BNB transfer for dev
+		
+		// BNB transfer for author (charity org)
+		
         emit Received(msg.sender, _tokenId, msg.value, address(this).balance);
     }
 
