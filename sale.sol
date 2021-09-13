@@ -250,7 +250,7 @@ contract nftSales is Ownable, Pausable, Destructible {
         uint256 realySalePrice;
 		require(msg.sender != address(0) && msg.sender != address(this));
         //require(msg.value >= currentPrice);
-		require(msg.value >= getSalePrice(_tokenId);
+		//require(msg.value >= getSalePrice(_tokenId);
 		
 		if(getSalePrice(_tokenId)==0){
 			realySalePrice=currentPrice;
@@ -258,7 +258,7 @@ contract nftSales is Ownable, Pausable, Destructible {
 			realySalePrice=getSalePrice(_tokenId);
 		}
 			
-        if(msg.value >=realySalePrice){
+        if(msg.value >= realySalePrice){
 		
 			require(nftAddress.exists(_tokenId));//need to test
 			address tokenSeller = nftAddress.ownerOf(_tokenId);//need to test
@@ -288,7 +288,7 @@ contract nftSales is Ownable, Pausable, Destructible {
 	*/
 	funtion purchaseWithHVI(uint256 _salePrice) public whenNotPaused {
 		// approve
-		HVIContract.Address.Approove(this.address, _salePrice);
+		HVIContract.Address.Approve(this.address, _salePrice);
 		//transferFrom
 		HVIContract.transferFrom(msg.sender,this.address,_salePrice);
 		
