@@ -213,13 +213,15 @@ contract nftSales is Ownable, Pausable, Destructible {
     event Sent(address indexed payee, uint256 amount, uint256 balance);
     event Received(address indexed payer, uint tokenId, uint256 amount, uint256 balance);
 
-    ERC721 public nftAddress;
+    ERC721 public nftAddress; //minter contract address
     uint256 public currentPrice;
+	ERC20 public HVIContract='0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26';
     
     struct salePrice{
             
             uint nftId;
             uint256 nftPrice;
+			address nftOwnerAddress;
         }
         
     salePrice[] public salePrices;
@@ -245,26 +247,64 @@ contract nftSales is Ownable, Pausable, Destructible {
     * ONLY BNB buy
 	*/
     function purchaseToken(uint256 _tokenId) public payable whenNotPaused {
-        require(msg.sender != address(0) && msg.sender != address(this));
+        uint256 realySalePrice;
+		require(msg.sender != address(0) && msg.sender != address(this));
         //require(msg.value >= currentPrice);
 		require(msg.value >= getSalePrice(_tokenId);
-        require(nftAddress.exists(_tokenId));//need to test
-        address tokenSeller = nftAddress.ownerOf(_tokenId);//need to test
-        nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
 		
-		// calculate to dev and author fee and reduce from BNB
+		if(getSalePrice(_tokenId)==0){
+			realySalePrice=currentPrice;
+		}else{
+			realySalePrice=getSalePrice(_tokenId);
+		}
+			
+        if(msg.value >=realySalePrice){
 		
-		//BNB change to HVI on Pancakeswap
-		
-		//HVI transfer for seller
-		
-		//BNB transfer for dev
-		
-		// BNB transfer for author (charity org)
-		
-        emit Received(msg.sender, _tokenId, msg.value, address(this).balance);
+			require(nftAddress.exists(_tokenId));//need to test
+			address tokenSeller = nftAddress.ownerOf(_tokenId);//need to test
+			nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
+			
+			// calculate to dev and author fee and reduce from BNB
+			
+			//BNB change to HVI on Pancakeswap
+			
+			//HVI transfer for seller
+			
+			//BNB transfer for dev
+			
+			// BNB transfer for author (charity org)
+			
+			//remove NFT from salePrice
+			
+			emit Received(msg.sender, _tokenId, msg.value, address(this).balance);
+			
+		}
     }
-
+	
+	
+	/**
+	*BUY only HVI tokens
+	*
+	*/
+	funtion purchaseWithHVI(uint256 _salePrice) public whenNotPaused {
+		// approve
+		HVIContract.Address.Approove(this.address, _salePrice);
+		//transferFrom
+		HVIContract.transferFrom(msg.sender,this.address,_salePrice);
+		
+		//HVI reduce devfee & author fee
+		
+		// send HVI to seller
+		
+		// send HVI to dev & author (Charity Org)
+		
+		// send NFT to buyer
+		
+		//remove NFT from salePrice
+		
+		
+	}
+	
     /**
     * @dev send / withdraw _amount to _payee
     */
@@ -278,15 +318,20 @@ contract nftSales is Ownable, Pausable, Destructible {
     /**
     * @dev Updates _currentPrice
     * @dev Throws if _currentPrice is zero
+	* NOT USING The NFTs has umique price, USE ONLY IF NOT set unique price
     */
     function setCurrentPrice(uint256 _currentPrice) public onlyOwner {
         require(_currentPrice > 0);
         currentPrice = _currentPrice;
     }    
     
-    
+    /*
+	* IF the NFT owner give approve the NFT sale, need to set the unique price
+	
+	*/
 	function setSalesPrice(uint256 _tokenId, uint256 nftSalePrice) public onlyOwner {
-        salePrices.push(salePrice({nftId: _tokenId,nftPrice:nftSalePrice}));
+        require(msg.sender != nftAddress.ownerOf(_tokenId), 'YOU NOT the NFT owner');
+		salePrices.push(salePrice({nftId: _tokenId,nftPrice:nftSalePrice, nftOwnerAddress:msg.sender}));
 		
     }
     
