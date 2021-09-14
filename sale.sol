@@ -1,4 +1,9 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.4.23;
+//pragma solidity ^0.8.0;
+
+//import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title ERC721 Non-Fungible Token Standard basic interface
@@ -79,6 +84,8 @@ contract ERC721Metadata is ERC721Basic {
  */
 contract ERC721 is ERC721Basic, ERC721Enumerable, ERC721Metadata {
 }
+
+
 
 /**
  * @title Ownable
@@ -215,7 +222,7 @@ contract nftSales is Ownable, Pausable, Destructible {
 
     ERC721 public nftAddress; //minter contract address
     uint256 public currentPrice;
-	ERC20 public HVIContract='0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26';
+	//ERC20 public HVIContract= ERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26);
     
     struct salePrice{
             
@@ -226,8 +233,11 @@ contract nftSales is Ownable, Pausable, Destructible {
         
     salePrice[] public salePrices;
 
-
-    
+/*
+    function approveOtherContract(IERC20 token, address recipient, uint256 _approveValue) public {
+        token.approve(recipient, _approveValue);
+    }
+*/    
 
     /**
     * @dev Contract Constructor
@@ -286,11 +296,13 @@ contract nftSales is Ownable, Pausable, Destructible {
 	*BUY only HVI tokens
 	*
 	*/
-	funtion purchaseWithHVI(uint256 _salePrice) public whenNotPaused {
+	function purchaseWithHVI(uint256 _salePrice) public whenNotPaused {
 		// approve
-		HVIContract.Address.Approve(this.address, _salePrice);
+		//HVIContract.approve(this.address, _salePrice);
+		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).approve(address(this), _salePrice);
+		//approveOtherContract(HVIContract,this.address, _salePrice);
 		//transferFrom
-		HVIContract.transferFrom(msg.sender,this.address,_salePrice);
+		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).transferFrom(msg.sender,address(this),_salePrice);
 		
 		//HVI reduce devfee & author fee
 		
