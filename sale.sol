@@ -83,6 +83,7 @@ contract ERC721Metadata is ERC721Basic {
  * @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
 contract ERC721 is ERC721Basic, ERC721Enumerable, ERC721Metadata {
+     function getAuthorAddres(uint256 _tokenId) public view returns (address);
 }
 
 
@@ -190,6 +191,150 @@ contract Pausable is Ownable {
   }
 }
 
+library SafeMath {
+    /**
+     * @dev Returns the addition of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `+` operator.
+     *
+     * Requirements:
+     *
+     * - Addition cannot overflow.
+     */
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return sub(a, b, "SafeMath: subtraction overflow");
+    }
+
+    /**
+     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
+     * overflow (when the result is negative).
+     *
+     * Counterpart to Solidity's `-` operator.
+     *
+     * Requirements:
+     *
+     * - Subtraction cannot overflow.
+     */
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the multiplication of two unsigned integers, reverting on
+     * overflow.
+     *
+     * Counterpart to Solidity's `*` operator.
+     *
+     * Requirements:
+     *
+     * - Multiplication cannot overflow.
+     */
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+        if (a == 0) {
+            return 0;
+        }
+
+        uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return div(a, b, "SafeMath: division by zero");
+    }
+
+    /**
+     * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
+     * division by zero. The result is rounded towards zero.
+     *
+     * Counterpart to Solidity's `/` operator. Note: this function uses a
+     * `revert` opcode (which leaves remaining gas untouched) while Solidity
+     * uses an invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
+        return c;
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return mod(a, b, "SafeMath: modulo by zero");
+    }
+
+    /**
+     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
+     * Reverts with custom message when dividing by zero.
+     *
+     * Counterpart to Solidity's `%` operator. This function uses a `revert`
+     * opcode (which leaves remaining gas untouched) while Solidity uses an
+     * invalid opcode to revert (consuming all remaining gas).
+     *
+     * Requirements:
+     *
+     * - The divisor cannot be zero.
+     */
+    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b != 0, errorMessage);
+        return a % b;
+    }
+}
+
+
 /**
  * @title Destructible
  * @dev Base contract that can be destroyed by owner. All funds in contract will be sent to the owner.
@@ -221,6 +366,7 @@ contract nftSales is Ownable, Pausable, Destructible {
     event Received(address indexed payer, uint tokenId, uint256 amount, uint256 balance);
 
     ERC721 public nftAddress; //minter contract address
+    address public devWalletAddress;
     uint256 public currentPrice;
 	//ERC20 public HVIContract= ERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26);
     
@@ -270,23 +416,28 @@ contract nftSales is Ownable, Pausable, Destructible {
 			
         if(msg.value >= realySalePrice){
 		
-			require(nftAddress.exists(_tokenId));//need to test
+			//require(nftAddress.exists(_tokenId));//need to test
 			address tokenSeller = nftAddress.ownerOf(_tokenId);//need to test
 			nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
 			
 			// calculate to dev and author fee and reduce from BNB
+			uint256 devFee = msg.value / 10; // first adoption 10% fee to dev
+		    //uint256 authorFee = salePrice * 0.03; // itt a többi az author-e ezert nincs authfee
 			
-			//BNB change to HVI on Pancakeswap
+			//BNB-10% change to HVI on Pancakeswap!!!!!
 			
-			//HVI transfer for seller
+			//HVI (BNB) transfer for seller
+			// if the contract can change BNB to HVI On Pancakeswap trasnfer the HVI to author
+			address authAddress = nftAddress.getAuthorAddres(_tokenId);
+			authAddress.transfer(msg.value-(msg.value/10));
+			
 			
 			//BNB transfer for dev
+			devWalletAddress.transfer(devFee);
 			
-			// BNB transfer for author (charity org)
+			//remove NFT from salePrice[]
 			
-			//remove NFT from salePrice
-			
-			emit Received(msg.sender, _tokenId, msg.value, address(this).balance);
+			//emit Received(msg.sender, _tokenId, msg.value, address(this).balance);
 			
 		}
     }
@@ -296,23 +447,31 @@ contract nftSales is Ownable, Pausable, Destructible {
 	*BUY only HVI tokens
 	*
 	*/
-	function purchaseWithHVI(uint256 _salePrice) public whenNotPaused {
-		// approve
-		//HVIContract.approve(this.address, _salePrice);
-		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).approve(address(this), _salePrice);
-		//approveOtherContract(HVIContract,this.address, _salePrice);
+	function purchaseWithHVI(uint256 _salePrice, uint256 _tokenId) public whenNotPaused {
+	
+		require(_salePrice > 0, "You need to sell at least some tokens");
+        uint256 allowance = IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).allowance(msg.sender, address(this));
+        require(allowance >= _salePrice, "Check the token allowance");
 		//transferFrom
+		
 		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).transferFrom(msg.sender,address(this),_salePrice);
 		
 		//HVI reduce devfee & author fee
+		uint256 devFee = _salePrice / 10; // first adoption 10% fee to dev
+		//uint256 authorFee = salePrice * 0.03; // itt a többi az author-e ezert nincs authfee
+	
 		
 		// send HVI to seller
-		
+		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).transferFrom(address(this),msg.sender,_salePrice-(_salePrice/10));
 		// send HVI to dev & author (Charity Org)
-		
+		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).transferFrom(address(this),devWalletAddress,devFee);
 		// send NFT to buyer
+		address tokenSeller = nftAddress.ownerOf(_tokenId);
+		nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
 		
-		//remove NFT from salePrice
+		//remove NFT from salePrice[]
+		
+		
 		
 		
 	}
@@ -358,7 +517,12 @@ contract nftSales is Ownable, Pausable, Destructible {
                 returnPrice = salePrice1.nftPrice;
             }
              return returnPrice;
-        }
+    }
+    
+    function setDevWallet(address _devWalletAddress) public onlyOwner {
+        devWalletAddress =_devWalletAddress;
+		
+    }
 	
     /*
     function delDonateList(address _doanteaddress, uint256 _tokenId) public onlyOwner {
