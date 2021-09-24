@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.4.23;
+pragma solidity ^0.8.1;
 //pragma solidity ^0.8.0;
 
 //import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+    
 /**
  * @title ERC721 Non-Fungible Token Standard basic interface
  * @dev see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
-contract ERC721Basic {
+abstract contract ERC721Basic {
   event Transfer(
     address indexed _from,
     address indexed _to,
@@ -25,68 +25,68 @@ contract ERC721Basic {
     address indexed _operator,
     bool _approved
   );
+  
+ 
+  
+  function balanceOf(address _owner) public virtual view returns (uint256 _balance);
+  function ownerOf(uint256 _tokenId) public virtual view returns (address _owner);
+  function exists(uint256 _tokenId) public virtual view returns (bool _exists);
 
-  function balanceOf(address _owner) public view returns (uint256 _balance);
-  function ownerOf(uint256 _tokenId) public view returns (address _owner);
-  function exists(uint256 _tokenId) public view returns (bool _exists);
-
-  function approve(address _to, uint256 _tokenId) public;
+  function approve(address _to, uint256 _tokenId) public virtual;
   function getApproved(uint256 _tokenId)
-    public view returns (address _operator);
+    public virtual view returns (address _operator);
 
-  function setApprovalForAll(address _operator, bool _approved) public;
+  function setApprovalForAll(address _operator, bool _approved) public virtual;
   function isApprovedForAll(address _owner, address _operator)
-    public view returns (bool);
+    public virtual view returns (bool);
 
-  function transferFrom(address _from, address _to, uint256 _tokenId) public;
+  function transferFrom(address _from, address _to, uint256 _tokenId) public virtual;
   function safeTransferFrom(address _from, address _to, uint256 _tokenId)
-    public;
+    public virtual;
 
   function safeTransferFrom(
     address _from,
     address _to,
     uint256 _tokenId,
-    bytes _data
+    bytes memory _data
   )
-    public;
+    public virtual;
 }
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional enumeration extension
  * @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
-contract ERC721Enumerable is ERC721Basic {
-  function totalSupply() public view returns (uint256);
+abstract contract ERC721Enumerable is ERC721Basic {
+  function totalSupply() public virtual view returns (uint256);
   function tokenOfOwnerByIndex(
     address _owner,
     uint256 _index
   )
-    public
+    public virtual
     view
     returns (uint256 _tokenId);
 
-  function tokenByIndex(uint256 _index) public view returns (uint256);
+  function tokenByIndex(uint256 _index) public virtual view returns (uint256);
 }
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional metadata extension
  * @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
-contract ERC721Metadata is ERC721Basic {
-  function name() public view returns (string _name);
-  function symbol() public view returns (string _symbol);
-  function tokenURI(uint256 _tokenId) public view returns (string);
+abstract contract ERC721Metadata is ERC721Basic {
+  function name() public virtual view returns (string memory  _name);
+  function symbol() public virtual view returns (string memory _symbol);
+  function tokenURI(uint256 _tokenId) public virtual view returns (string memory);
 }
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, full implementation interface
  * @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
  */
-contract ERC721 is ERC721Basic, ERC721Enumerable, ERC721Metadata {
-     function getAuthorAddres(uint256 _tokenId) public view returns (address);
+abstract contract ERC721 is ERC721Basic, ERC721Enumerable, ERC721Metadata {
+     function getAuthorAddres(uint256 _tokenId) public virtual view returns (address);
 }
-
-
 
 /**
  * @title Ownable
@@ -108,7 +108,9 @@ contract Ownable {
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
    * account.
    */
-  constructor() public {
+//   IUniswapV2Router02 public immutable uniswapV2Router;
+//   address public immutable uniswapV2Pair;
+  constructor()  {
     owner = msg.sender;
   }
 
@@ -334,6 +336,352 @@ library SafeMath {
     }
 }
 
+interface IUniswapV2Pair {
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    function name() external pure returns (string memory);
+
+    function symbol() external pure returns (string memory);
+
+    function decimals() external pure returns (uint8);
+
+    function totalSupply() external view returns (uint256);
+
+    function balanceOf(address owner) external view returns (uint256);
+
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
+
+    function approve(address spender, uint256 value) external returns (bool);
+
+    function transfer(address to, uint256 value) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) external returns (bool);
+
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+    function PERMIT_TYPEHASH() external pure returns (bytes32);
+
+    function nonces(address owner) external view returns (uint256);
+
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    event Mint(address indexed sender, uint256 amount0, uint256 amount1);
+    event Burn(
+        address indexed sender,
+        uint256 amount0,
+        uint256 amount1,
+        address indexed to
+    );
+    event Swap(
+        address indexed sender,
+        uint256 amount0In,
+        uint256 amount1In,
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address indexed to
+    );
+    event Sync(uint112 reserve0, uint112 reserve1);
+
+    function MINIMUM_LIQUIDITY() external pure returns (uint256);
+
+    function factory() external view returns (address);
+
+    function token0() external view returns (address);
+
+    function token1() external view returns (address);
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function price0CumulativeLast() external view returns (uint256);
+
+    function price1CumulativeLast() external view returns (uint256);
+
+    function kLast() external view returns (uint256);
+
+    function mint(address to) external returns (uint256 liquidity);
+
+    function burn(address to)
+        external
+        returns (uint256 amount0, uint256 amount1);
+
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function skim(address to) external;
+
+    function sync() external;
+
+    function initialize(address, address) external;
+}
+
+interface IUniswapV2Router01 {
+    function factory() external pure returns (address);
+
+    function WETH() external pure returns (address);
+
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 amountADesired,
+        uint256 amountBDesired,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline
+    )
+        external
+        returns (
+            uint256 amountA,
+            uint256 amountB,
+            uint256 liquidity
+        );
+
+    function addLiquidityETH(
+        address token,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline
+    )
+        external
+        payable
+        returns (
+            uint256 amountToken,
+            uint256 amountETH,
+            uint256 liquidity
+        );
+
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline
+    ) external returns (uint256 amountA, uint256 amountB);
+
+    function removeLiquidityETH(
+        address token,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline
+    ) external returns (uint256 amountToken, uint256 amountETH);
+
+    function removeLiquidityWithPermit(
+        address tokenA,
+        address tokenB,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline,
+        bool approveMax,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 amountA, uint256 amountB);
+
+    function removeLiquidityETHWithPermit(
+        address token,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline,
+        bool approveMax,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 amountToken, uint256 amountETH);
+
+    function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapTokensForExactTokens(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapExactETHForTokens(
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts);
+
+    function swapTokensForExactETH(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapExactTokensForETH(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapETHForExactTokens(
+        uint256 amountOut,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts);
+
+    function quote(
+        uint256 amountA,
+        uint256 reserveA,
+        uint256 reserveB
+    ) external pure returns (uint256 amountB);
+
+    function getAmountOut(
+        uint256 amountIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) external pure returns (uint256 amountOut);
+
+    function getAmountIn(
+        uint256 amountOut,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) external pure returns (uint256 amountIn);
+
+    function getAmountsOut(uint256 amountIn, address[] calldata path)
+        external
+        view
+        returns (uint256[] memory amounts);
+
+    function getAmountsIn(uint256 amountOut, address[] calldata path)
+        external
+        view
+        returns (uint256[] memory amounts);
+}
+ 
+// pragma solidity >=0.6.2;
+
+interface IUniswapV2Router02 is IUniswapV2Router01 {
+    function removeLiquidityETHSupportingFeeOnTransferTokens(
+        address token,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline
+    ) external returns (uint256 amountETH);
+
+    function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
+        address token,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline,
+        bool approveMax,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 amountETH);
+
+    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external;
+
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable;
+
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external;
+}
+
+interface IUniswapV2Factory {
+    event PairCreated(
+        address indexed token0,
+        address indexed token1,
+        address pair,
+        uint256
+    );
+
+    function feeTo() external view returns (address);
+
+    function feeToSetter() external view returns (address);
+
+    function getPair(address tokenA, address tokenB)
+        external
+        view
+        returns (address pair);
+
+    function allPairs(uint256) external view returns (address pair);
+
+    function allPairsLength() external view returns (uint256);
+
+    function createPair(address tokenA, address tokenB)
+        external
+        returns (address pair);
+
+    function setFeeTo(address) external;
+
+    function setFeeToSetter(address) external;
+}
 
 /**
  * @title Destructible
@@ -341,17 +689,17 @@ library SafeMath {
  */
 contract Destructible is Ownable {
 
-  constructor() public payable { }
+  constructor()  { }
 
   /**
-   * @dev Transfers the current balance to the owner and terminates the contract.
-   */
-  function destroy() onlyOwner public {
-    selfdestruct(owner);
+  * @dev Transfers the current balance to the owner and terminates the contract.
+  */
+  function destroy() onlyOwner public  {
+    selfdestruct(payable (owner));
   }
 
-  function destroyAndSend(address _recipient) onlyOwner public {
-    selfdestruct(_recipient);
+  function destroyAndSend(address _recipient) onlyOwner public  {
+    selfdestruct(payable (_recipient));
   }
 }
 
@@ -360,7 +708,7 @@ contract Destructible is Ownable {
 /* a sales contract for CryptoArte non-fungible tokens 
  * corresponding to paintings from the www.cryptoarte.io collection
  */
-contract nftSales is Ownable, Pausable, Destructible {
+ contract nftSales is Ownable, Pausable ,Destructible {
 
     event Sent(address indexed payee, uint256 amount, uint256 balance);
     event Received(address indexed payer, uint tokenId, uint256 amount, uint256 balance);
@@ -368,7 +716,7 @@ contract nftSales is Ownable, Pausable, Destructible {
     ERC721 public nftAddress; //minter contract address
     address public devWalletAddress;
     uint256 public currentPrice;
-	//ERC20 public HVIContract= ERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26);
+	IERC20 public HVIContract = IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26);
     
     struct salePrice{
             
@@ -390,7 +738,7 @@ contract nftSales is Ownable, Pausable, Destructible {
     * @param _nftAddress address non-fungible token contract 
     * @param _currentPrice initial sales price
     */
-    constructor(address _nftAddress, uint256 _currentPrice) public { 
+     constructor(address _nftAddress, uint256 _currentPrice)  { 
         require(_nftAddress != address(0) && _nftAddress != address(this));
         require(_currentPrice > 0);
         nftAddress = ERC721(_nftAddress);
@@ -402,6 +750,7 @@ contract nftSales is Ownable, Pausable, Destructible {
     * @param _tokenId uint256 token ID (painting number)
     * ONLY BNB buy
 	*/
+	
     function purchaseToken(uint256 _tokenId) public payable whenNotPaused {
         uint256 realySalePrice;
 		require(msg.sender != address(0) && msg.sender != address(this));
@@ -417,7 +766,8 @@ contract nftSales is Ownable, Pausable, Destructible {
         if(msg.value >= realySalePrice){
 		
 			//require(nftAddress.exists(_tokenId));//need to test
-			address tokenSeller = nftAddress.ownerOf(_tokenId);//need to test
+			address tokenSeller = nftAddress.ownerOf(_tokenId);
+			address  authAddress = nftAddress.getAuthorAddres(_tokenId);
 			nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
 			
 			// calculate to dev and author fee and reduce from BNB
@@ -425,15 +775,26 @@ contract nftSales is Ownable, Pausable, Destructible {
 		    //uint256 authorFee = salePrice * 0.03; // itt a többi az author-e ezert nincs authfee
 			
 			//BNB-10% change to HVI on Pancakeswap!!!!!
+			address[] memory path = new address[](2);
+            path[0] = 0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26; // HVI
+            path[1] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; //WBNB
+	        
+	        //HVI (BNB) transfer for seller
+	        
+			IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E).swapExactETHForTokens{value : msg.value-(msg.value/10)}(
+            0,
+            path,
+            authAddress,/*tokenSeller,*/
+            block.timestamp 
+           );
 			
-			//HVI (BNB) transfer for seller
 			// if the contract can change BNB to HVI On Pancakeswap trasnfer the HVI to author
-			address authAddress = nftAddress.getAuthorAddres(_tokenId);
-			authAddress.transfer(msg.value-(msg.value/10));
+			 //  address  authAddress = nftAddress.getAuthorAddres(_tokenId);
+			 //payable (authAddress).transfer(msg.value-(msg.value/10));
 			
 			
 			//BNB transfer for dev
-			devWalletAddress.transfer(devFee);
+			payable(devWalletAddress).transfer(devFee);
 			
 			//remove NFT from salePrice[]
 			
@@ -442,7 +803,6 @@ contract nftSales is Ownable, Pausable, Destructible {
 		}
     }
 	
-	
 	/**
 	*BUY only HVI tokens
 	*
@@ -450,29 +810,27 @@ contract nftSales is Ownable, Pausable, Destructible {
 	function purchaseWithHVI(uint256 _salePrice, uint256 _tokenId) public whenNotPaused {
 	
 		require(_salePrice > 0, "You need to sell at least some tokens");
-        uint256 allowance = IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).allowance(msg.sender, address(this));
+        uint256 allowance = HVIContract.allowance(msg.sender, address(this));
         require(allowance >= _salePrice, "Check the token allowance");
 		//transferFrom
 		
-		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).transferFrom(msg.sender,address(this),_salePrice);
+		HVIContract.transferFrom(msg.sender,address(this),_salePrice);
 		
 		//HVI reduce devfee & author fee
 		uint256 devFee = _salePrice / 10; // first adoption 10% fee to dev
 		//uint256 authorFee = salePrice * 0.03; // itt a többi az author-e ezert nincs authfee
 	
-		
-		// send HVI to seller
-		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).transferFrom(address(this),msg.sender,_salePrice-(_salePrice/10));
-		// send HVI to dev & author (Charity Org)
-		IERC20(0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26).transferFrom(address(this),devWalletAddress,devFee);
-		// send NFT to buyer
 		address tokenSeller = nftAddress.ownerOf(_tokenId);
+		address  authAddress = nftAddress.getAuthorAddres(_tokenId);
+		// send HVI to seller(first author)
+		HVIContract.transferFrom(address(this),authAddress,_salePrice-(_salePrice/10));
+		// send HVI to dev & author (Charity Org)
+		HVIContract.transferFrom(address(this),devWalletAddress,devFee);
+		// send NFT to buyer
+		
 		nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
 		
 		//remove NFT from salePrice[]
-		
-		
-		
 		
 	}
 	
@@ -482,7 +840,7 @@ contract nftSales is Ownable, Pausable, Destructible {
     function sendTo(address _payee, uint256 _amount) public onlyOwner {
         require(_payee != address(0) && _payee != address(this));
         require(_amount > 0 && _amount <= address(this).balance);
-        _payee.transfer(_amount);
+        payable (_payee).transfer(_amount);
         emit Sent(_payee, _amount, address(this).balance);
     }    
 
@@ -523,6 +881,9 @@ contract nftSales is Ownable, Pausable, Destructible {
         devWalletAddress =_devWalletAddress;
 		
     }
+    
+
+    
 	
     /*
     function delDonateList(address _doanteaddress, uint256 _tokenId) public onlyOwner {
@@ -531,201 +892,6 @@ contract nftSales is Ownable, Pausable, Destructible {
     }  
     */
     
-   
-   
-   
-       //PANCAKESWAP interface
-       /*
-       interface IUniswapV2Pair {
-        event Approval(address indexed owner, address indexed spender, uint value);
-        event Transfer(address indexed from, address indexed to, uint value);
-    
-        function name() external pure returns (string memory);
-        function symbol() external pure returns (string memory);
-        function decimals() external pure returns (uint8);
-        function totalSupply() external view returns (uint);
-        function balanceOf(address owner) external view returns (uint);
-        function allowance(address owner, address spender) external view returns (uint);
-    
-        function approve(address spender, uint value) external returns (bool);
-        function transfer(address to, uint value) external returns (bool);
-        function transferFrom(address from, address to, uint value) external returns (bool);
-    
-        function DOMAIN_SEPARATOR() external view returns (bytes32);
-        function PERMIT_TYPEHASH() external pure returns (bytes32);
-        function nonces(address owner) external view returns (uint);
-    
-        function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
-    
-        event Mint(address indexed sender, uint amount0, uint amount1);
-        event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
-        event Swap(
-            address indexed sender,
-            uint amount0In,
-            uint amount1In,
-            uint amount0Out,
-            uint amount1Out,
-            address indexed to
-        );
-        event Sync(uint112 reserve0, uint112 reserve1);
-    
-        function MINIMUM_LIQUIDITY() external pure returns (uint);
-        function factory() external view returns (address);
-        function token0() external view returns (address);
-        function token1() external view returns (address);
-        function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
-        function price0CumulativeLast() external view returns (uint);
-        function price1CumulativeLast() external view returns (uint);
-        function kLast() external view returns (uint);
-    
-        function mint(address to) external returns (uint liquidity);
-        function burn(address to) external returns (uint amount0, uint amount1);
-        function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
-        function skim(address to) external;
-        function sync() external;
-    
-        function initialize(address, address) external;
-    }
-    
-    // pragma solidity >=0.6.2;
-    
-    interface IUniswapV2Router01 {
-        function factory() external pure returns (address);
-        function WETH() external pure returns (address);
-    
-        function addLiquidity(
-            address tokenA,
-            address tokenB,
-            uint amountADesired,
-            uint amountBDesired,
-            uint amountAMin,
-            uint amountBMin,
-            address to,
-            uint deadline
-        ) external returns (uint amountA, uint amountB, uint liquidity);
-        function addLiquidityETH(
-            address token,
-            uint amountTokenDesired,
-            uint amountTokenMin,
-            uint amountETHMin,
-            address to,
-            uint deadline
-        ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
-        function removeLiquidity(
-            address tokenA,
-            address tokenB,
-            uint liquidity,
-            uint amountAMin,
-            uint amountBMin,
-            address to,
-            uint deadline
-        ) external returns (uint amountA, uint amountB);
-        function removeLiquidityETH(
-            address token,
-            uint liquidity,
-            uint amountTokenMin,
-            uint amountETHMin,
-            address to,
-            uint deadline
-        ) external returns (uint amountToken, uint amountETH);
-        function removeLiquidityWithPermit(
-            address tokenA,
-            address tokenB,
-            uint liquidity,
-            uint amountAMin,
-            uint amountBMin,
-            address to,
-            uint deadline,
-            bool approveMax, uint8 v, bytes32 r, bytes32 s
-        ) external returns (uint amountA, uint amountB);
-        function removeLiquidityETHWithPermit(
-            address token,
-            uint liquidity,
-            uint amountTokenMin,
-            uint amountETHMin,
-            address to,
-            uint deadline,
-            bool approveMax, uint8 v, bytes32 r, bytes32 s
-        ) external returns (uint amountToken, uint amountETH);
-        function swapExactTokensForTokens(
-            uint amountIn,
-            uint amountOutMin,
-            address[] calldata path,
-            address to,
-            uint deadline
-        ) external returns (uint[] memory amounts);
-        function swapTokensForExactTokens(
-            uint amountOut,
-            uint amountInMax,
-            address[] calldata path,
-            address to,
-            uint deadline
-        ) external returns (uint[] memory amounts);
-        function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
-            external
-            payable
-            returns (uint[] memory amounts);
-        function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
-            external
-            returns (uint[] memory amounts);
-        function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-            external
-            returns (uint[] memory amounts);
-        function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
-            external
-            payable
-            returns (uint[] memory amounts);
-    
-        function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
-        function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
-        function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
-        function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
-        function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
-    }
-    
-    
-    
-    // pragma solidity >=0.6.2;
-    
-    interface IUniswapV2Router02 is IUniswapV2Router01 {
-        function removeLiquidityETHSupportingFeeOnTransferTokens(
-            address token,
-            uint liquidity,
-            uint amountTokenMin,
-            uint amountETHMin,
-            address to,
-            uint deadline
-        ) external returns (uint amountETH);
-        function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
-            address token,
-            uint liquidity,
-            uint amountTokenMin,
-            uint amountETHMin,
-            address to,
-            uint deadline,
-            bool approveMax, uint8 v, bytes32 r, bytes32 s
-        ) external returns (uint amountETH);
-    
-        function swapExactTokensForTokensSupportingFeeOnTransferTokens(
-            uint amountIn,
-            uint amountOutMin,
-            address[] calldata path,
-            address to,
-            uint deadline
-        ) external;
-        function swapExactETHForTokensSupportingFeeOnTransferTokens(
-            uint amountOutMin,
-            address[] calldata path,
-            address to,
-            uint deadline
-        ) external payable;
-        function swapExactTokensForETHSupportingFeeOnTransferTokens(
-            uint amountIn,
-            uint amountOutMin,
-            address[] calldata path,
-            address to,
-            uint deadline
-        ) external;
-    }*/
+
 
 }
