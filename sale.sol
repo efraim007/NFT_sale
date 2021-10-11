@@ -252,6 +252,7 @@ library SafeMath {
      *
      * - Multiplication cannot overflow.
      */
+    /*
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
         // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
         // benefit is lost if 'b' is also tested.
@@ -264,6 +265,11 @@ library SafeMath {
         require(c / a == b, "SafeMath: multiplication overflow");
 
         return c;
+    }
+    */
+
+     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a * b;
     }
 
     /**
@@ -710,6 +716,7 @@ contract Destructible is Ownable {
  */
  contract nftSales is Ownable, Pausable ,Destructible {
 
+    using SafeMath for uint256;
     event Sent(address indexed payee, uint256 amount, uint256 balance);
     event Received(address indexed payer, uint tokenId, uint256 amount, uint256 balance);
 
@@ -722,6 +729,7 @@ contract Destructible is Ownable {
             
             uint nftId;
             uint256 nftPrice;
+            uint256 nftHVIPrice;
 			address nftOwnerAddress;
         }
         
@@ -757,10 +765,10 @@ contract Destructible is Ownable {
         //require(msg.value >= currentPrice);
 		//require(msg.value >= getSalePrice(_tokenId);
 		
-		if(getSalePrice(_tokenId)==0){
+		if(getSalePrice(_tokenId,1)==0){
 			realySalePrice=currentPrice;
 		}else{
-			realySalePrice=getSalePrice(_tokenId);
+			realySalePrice=getSalePrice(_tokenId,1);
 		}
 			
         if(msg.value >= realySalePrice){
@@ -769,15 +777,19 @@ contract Destructible is Ownable {
 			address tokenSeller = nftAddress.ownerOf(_tokenId);
 			address  authAddress = nftAddress.getAuthorAddres(_tokenId);
 			nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
+			//uint256 swapForBurn=msg.value.mul(5).div(10**2);//5% to burn
+            uint256 swapForBurn=msg.value*5/100;//5% to burn
 			
-			// calculate to dev and author fee and reduce from BNB
-			uint256 devFee = msg.value / 10; // first adoption 10% fee to dev
+            // calculate to dev and author fee and reduce from BNB
+			//uint256 devFee = msg.value.mul(5).div(10**2); // first adoption 5% fee to dev
+            uint256 devFee =msg.value*5/100; // first adoption 5% fee to dev
 		    //uint256 authorFee = salePrice * 0.03; // itt a többi az author-e ezert nincs authfee
 			
 			//BNB-10% change to HVI on Pancakeswap!!!!!
 			address[] memory path = new address[](2);
-            path[0] = 0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26; // HVI
-            path[1] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; //WBNB
+            
+            path[0] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; //WBNB
+	        path[1] = 0xDE619A9E0eEeAA9F8CD39522Ed788234837F3B26; // HVI
 	        
 	        //HVI (BNB) transfer for seller
 	        
@@ -785,16 +797,26 @@ contract Destructible is Ownable {
             0,
             path,
             authAddress,/*tokenSeller,*/
-            block.timestamp 
+            block.timestamp+25
            );
 			
+            //swap for burn
+            IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E).swapExactETHForTokens{value : swapForBurn}(
+            0,
+            path,
+            0x000000000000000000000000000000000000dEaD,/*address(this),tokenSeller,*/
+            block.timestamp+25
+           );
+
 			// if the contract can change BNB to HVI On Pancakeswap trasnfer the HVI to author
 			 //  address  authAddress = nftAddress.getAuthorAddres(_tokenId);
 			 //payable (authAddress).transfer(msg.value-(msg.value/10));
 			
 			
 			//BNB transfer for dev
-			payable(devWalletAddress).transfer(devFee);
+			payable(devWalletAddress).transfer(devFee); //5% to dev
+            //payable(0x000000000000000000000000000000000000dEaD).transfer(devFee/2);//5% to burn
+            //emit Transfer(msg.sender, 0x000000000000000000000000000000000000dEaD, _value);
 			
 			//remove NFT from salePrice[]
 			
@@ -809,26 +831,28 @@ contract Destructible is Ownable {
 	*/
 	function purchaseWithHVI(uint256 _salePrice, uint256 _tokenId) public whenNotPaused {
 	
-		require(_salePrice > 0, "You need to sell at least some tokens");
+		require(_salePrice >= getSalePrice(_tokenId,2));
+        require(_salePrice > 0, "You need to sell at least some tokens");
         uint256 allowance = HVIContract.allowance(msg.sender, address(this));
         require(allowance >= _salePrice, "Check the token allowance");
 		//transferFrom
 		
 		HVIContract.transferFrom(msg.sender,address(this),_salePrice);
-		
+		//90% to org, 5% to dev 5% to burn
 		//HVI reduce devfee & author fee
-		uint256 devFee = _salePrice / 10; // first adoption 10% fee to dev
+		uint256 devFee = _salePrice*5/100; // first adoption 5% fee to dev
 		//uint256 authorFee = salePrice * 0.03; // itt a többi az author-e ezert nincs authfee
 	
 		address tokenSeller = nftAddress.ownerOf(_tokenId);
 		address  authAddress = nftAddress.getAuthorAddres(_tokenId);
 		// send HVI to seller(first author)
-		HVIContract.transferFrom(address(this),authAddress,_salePrice-(_salePrice/10));
+		HVIContract.transferFrom(address(this),authAddress,_salePrice*90/100);
 		// send HVI to dev & author (Charity Org)
 		HVIContract.transferFrom(address(this),devWalletAddress,devFee);
 		// send NFT to buyer
-		
 		nftAddress.safeTransferFrom(tokenSeller, msg.sender, _tokenId);
+        //burn 5% HVI
+        payable(0x000000000000000000000000000000000000dEaD).transfer(devFee);//5% to burn
 		
 		//remove NFT from salePrice[]
 		
@@ -842,6 +866,21 @@ contract Destructible is Ownable {
         require(_amount > 0 && _amount <= address(this).balance);
         payable (_payee).transfer(_amount);
         emit Sent(_payee, _amount, address(this).balance);
+    }  
+    
+    function sendHVIToDev(uint256 _amount) public onlyOwner {
+        
+        require(_amount > 0);
+		HVIContract.transferFrom(address(this),devWalletAddress,_amount);
+        
+    }
+	
+	function removeNFTToDev(uint256 _tokenId) public onlyOwner {
+        
+        address tokenSender = nftAddress.ownerOf(_tokenId);
+		require(tokenSender != address(this));
+		nftAddress.transferFrom(tokenSender, devWalletAddress, _tokenId);
+        
     }    
 
     /**
@@ -858,27 +897,63 @@ contract Destructible is Ownable {
 	* IF the NFT owner give approve the NFT sale, need to set the unique price
 	
 	*/
-	function setSalesPrice(uint256 _tokenId, uint256 nftSalePrice) public onlyOwner {
+	function setSalesPrice(uint256 _tokenId, uint256 nftSalePrice, uint256 nftHVISalePrice) public onlyOwner {
         require(msg.sender != nftAddress.ownerOf(_tokenId), 'YOU NOT the NFT owner');
-		salePrices.push(salePrice({nftId: _tokenId,nftPrice:nftSalePrice, nftOwnerAddress:msg.sender}));
+		salePrices.push(salePrice({nftId: _tokenId,nftPrice:nftSalePrice, nftHVIPrice:nftHVISalePrice, nftOwnerAddress:msg.sender}));
 		
     }
     
 	
-	function getSalePrice(uint256 _tokenId) public view returns (uint256) {
+	function getSalePrice(uint256 _tokenId, uint256 priceType) public view returns (uint256) {
             uint maxLength=salePrices.length;
             uint256 returnPrice; 
             
             for (uint i = 0; i < maxLength; i++) {
               salePrice storage salePrice1 = salePrices[i];
               if(salePrice1.nftId==_tokenId)
-                returnPrice = salePrice1.nftPrice;
+                
+                if(priceType==1){ // 1 = BNB min price 
+                    
+                    returnPrice = salePrice1.nftPrice;
+                }
+                
+                if(priceType==2){ // 2 = HVI min price 
+                    
+                    returnPrice = salePrice1.nftHVIPrice;
+                }
+                
+                   
             }
              return returnPrice;
     }
     
+    
+    function updateSalePrice(uint256 _tokenId, uint256 _bnbPrice, uint256 _hviPrice) public onlyOwner {
+            uint maxLength=salePrices.length;
+            
+            
+            for (uint i = 0; i < maxLength; i++) {
+              salePrice storage salePrice1 = salePrices[i];
+              if(salePrice1.nftId==_tokenId)
+                    salePrice1.nftPrice=_bnbPrice;
+                    salePrice1.nftHVIPrice=_hviPrice;
+              }
+            
+    }
+    
+    
     function setDevWallet(address _devWalletAddress) public onlyOwner {
         devWalletAddress =_devWalletAddress;
+		
+    }
+	
+	function setHVIContract(address _contractAddrees) public onlyOwner {
+        HVIContract =IERC20(_contractAddrees);
+		
+    }
+	
+	function setNFTContract(address _contractAddrees) public onlyOwner {
+         nftAddress = ERC721(_contractAddrees);
 		
     }
     
