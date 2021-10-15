@@ -1,12 +1,31 @@
 MAINNET HVI Adoption
 
-0xB3e9d51023BB4C94C146e30bB24E99eE61A54bBD
-https://bscscan.com/address/0xb3e9d51023bb4c94c146e30bb24e99ee61a54bbd
+https://bscscan.com/address/0x1026debef0124bca5c51f231c933d887c6a9e20e
 
 SALE Contract (only BNB Buy)
 
-0xC956Aa9e821a71a5d605F1D003695e34aa5536AD
-https://bscscan.com/address/0xc956aa9e821a71a5d605f1d003695e34aa5536ad
+0x2E3f522700a0A388fcD379cBB5e85acb88c4fD93
+https://bscscan.com/address/0x2e3f522700a0a388fcd379cbb5e85acb88c4fd93
+
+
+
+
+
+MINT
+
+0x11FeEC6b6151eF964BBdA6B128309D6F254d334b,https://json.vizslamarket.io/tokens/1,0x56d3c6678A65E55ca40E42E4Fa25855A76A34997
+
+https://json.vizslamarket.io/tokens/1
+
+
+
+
+
+Transfer: 0x11FeEC6b6151eF964BBdA6B128309D6F254d334b,0x2E3f522700a0A388fcD379cBB5e85acb88c4fD93,1
+
+SetSalePrice: tokenID,500000000000000000,500000000000000000000000000000000
+
+
 
 
 [
@@ -252,29 +271,6 @@ https://bscscan.com/address/0xc956aa9e821a71a5d605f1d003695e34aa5536ad
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "string",
-				"name": "metadata",
-				"type": "string"
-			},
-			{
-				"internalType": "address",
-				"name": "authorAddress",
-				"type": "address"
-			}
-		],
-		"name": "safemintWithAuthorAll",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
 				"name": "from",
 				"type": "address"
 			},
@@ -403,6 +399,11 @@ https://bscscan.com/address/0xc956aa9e821a71a5d605f1d003695e34aa5536ad
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -419,11 +420,6 @@ https://bscscan.com/address/0xc956aa9e821a71a5d605f1d003695e34aa5536ad
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
-	},
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
 	},
 	{
 		"inputs": [],
@@ -794,9 +790,6 @@ https://bscscan.com/address/0xc956aa9e821a71a5d605f1d003695e34aa5536ad
 		"type": "function"
 	}
 ]
-
-
-
 
 
 
@@ -1263,3 +1256,6 @@ https://bscscan.com/address/0xc956aa9e821a71a5d605f1d003695e34aa5536ad
 		"type": "function"
 	}
 ]
+
+
+
